@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Compliance</title>
+
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/ammo.js"></script>
+    <script src="libs/cannon.js"></script>
+    <script src="libs/Oimo.js"></script>
+    <script src="libs/earcut.min.js"></script>
+    <script src="libs/babylon.js"></script>
+    <script src="libs/babylonjs.materials.min.js"></script>
+    <script src="libs/babylonjs.proceduralTextures.min.js"></script>
+    <script src="libs/babylonjs.postProcess.min.js"></script>
+    <script src="libs/babylonjs.loaders.js"></script>
+    <script src="libs/babylonjs.serializers.min.js"></script>
+    <script src="libs/babylon.gui.min.js"></script>
+    <script src="libs/babylon.inspector.bundle.js"></script>
+
+    <style>
+      /*
+      all this CSS is just quick & dirty, support of multiple resolutions is not a focus right now
+      also it is pretty difficult to do, since we use a virtual resolution to replicate a CRT,
+      so some resolutions will display a moiré effect and similar weird other patterns
+      */
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: rgb(0, 11, 31);
+        background-image: url(./background.jpg);
+        background-size: cover;
+      }
+
+      .wrapper {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        outline: none;
+      }
+
+      #renderCanvas {
+        /*  screen ratio is 4:3 (1.33) */
+        width: 426px;
+        height: 320px;
+        touch-action: none;
+        outline: none;
+        border-radius: 120px;
+      }
+
+      @media only screen and (max-width: 600px) {
+        #renderCanvas {
+          width: 511px;
+          height: 384px;
+        }
+      }
+
+      @media only screen and (min-width: 600px) {
+        #renderCanvas {
+          width: 640px;
+          height: 480px;
+        }
+      }
+      
+      @media only screen and (min-width: 800px) {
+        #renderCanvas {
+          width: 800px;
+          height: 640px;
+        }
+      }
+
+      @media only screen and (min-width: 1024px) {
+        #renderCanvas {
+          width: 1024px;
+          height: 820px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper"><canvas id="renderCanvas"></canvas></div>
+    <script>
+      const config = {
+        crt: {
+          screenResolution: {
+            width: 640, // 486, 512, 640
+            height: 512, // 320, 480, 512, 640
+          }
+        }
+      };
+
+      const randomMutation = (value, probability = 1) => {
+        const r = Math.random();
+        return (r < probability || typeof value !== 'number') ? r : value;
+      }
+
+      const newRandomDigit = (digit) => {
+        digit.randomWobbleAmplitudeX = Math.random();
+        digit.randomWobbleAmplitudeY = Math.random();
+        digit.randomTimeShiftX = Math.random();
+        digit.randomTimeShiftY = Math.random();
+        digit.randomWobbleSpeedX = Math.random();
+        digit.randomWobbleSpeedY = Math.random();
+      }
+
+      const randomDigitMutation = (digit, probability) => {
+        digit.randomWobbleSpeedX = randomMutation(digit.randomWobbleSpeedX, probability);
+        digit.randomWobbleSpeedY = randomMutation(digit.randomWobbleSpeedY, probability);
+      }
+
+      var canvas = document.getElementById("renderCanvas");
+
+      var startRenderLoop = function (engine, canvas) {
+        engine.runRenderLoop(function () {
+          if (sceneToRender && sceneToRender.activeCamera) {
+            sceneToRender.render();
+          }
+        });
+      };
+
+      // get an "ajusted" size in pixel
+      // eg. if we want 9 "virtual pixels" we will need to have a larger size
+      const getFontSize = (size) => {
+        return Math.round(size * (window.innerHeight / config.crt.screenResolution.height));
+      }
+
+      // get an "ajusted" size in pixel
+      // eg. if we want 9 "virtual pixels" we will need to have a larger size
+      const getSize = (x, y) => {
+        var wRatio = window.innerWidth / config.crt.screenResolution.width;
+        var hRatio = window.innerHeight / config.crt.screenResolution.height;
+        return {
+          x: Math.round(x * wRatio),
+          y: Math.round(y * hRatio),
+        };
+      }
+
+
+      var engine = null;
+      var scene = null;
+      var sceneToRender = null;
+      var createDefaultEngine = function () {
+        return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false });
+      };
+      var createScene = function () {
+
+        var scene = new BABYLON.Scene(engine);
+        const backgroundBlue = new BABYLON.Color3(0, 0.04, 0.07);
+        const darkBlue = new BABYLON.Color3(0, 0.16, 0.28);
+        const deepBlue = new BABYLON.Color3(0, 0.156, 0.313);
+        const lightBlue = new BABYLON.Color3(0.062, 0.564, 0.690);
+        const brightBlue = new BABYLON.Color3(0.360, 0.768, 0.823);
+
+
+        scene.clearColor = backgroundBlue;
+
+        // This creates and positions a free camera (non-mesh)
+        var camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(0, 0, -10), scene);
+        camera.lowerRadiusLimit = camera.radius;
+        camera.upperRadiusLimit = camera.radius;
+
+        // This targets the camera to scene origin
+        camera.setTarget(BABYLON.Vector3.Zero());
+
+        // This attaches the camera to the canvas
+        camera.attachControl(canvas, true);
+
+        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+        var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+        // Default intensity is 1. Let's dim the light a small amount
+        light.intensity = 1;
+
+
+        // Our built-in 'ground' shape.
+       //  var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
+           // Ground
+          const width = 100;
+          const height = 100;
+          const subdivisions = 100;
+          var ground = BABYLON.MeshBuilder.CreateGround("ground", { width, height, subdivisions }, scene, false);
+          var groundMaterial = new BABYLON.GridMaterial("ground", scene);
+          ground.material = groundMaterial;
+          ground.updateFacetData();
+ 
+
+        // GUI
+        var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+        /*
+        var button = BABYLON.GUI.Button.CreateImageButton("but", "Click Me");
+        button.width = 0.2;
+        button.height = "80px";
+        button.color = "white";
+        button.background = "green";
+        advancedTexture.addControl(button);    
+        */
+ 
+        const matrix = [];
+        const matrixSize = 28;
+
+        let matrixTop = -500;
+        let matrixLeft = -500;
+        const matrixSpacing = 30;
+
+        let isDragging = false;
+        let isSelecting = false;
+
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+
+        // speed of the wobble effect
+        const minWobbleAmplitude = 0;
+        const maxWobbleAmplitude = 10;
+
+        const lowFreqWobbleTimeMin = 0.001;
+        const lowFreqWobbleTimeMax = 0.005;
+
+        // speed of the wobble effect
+        const minWobbleSpeed = 0.0005;
+        const maxWobbleSpeed = 0.0010;    
+
+        // we want to "desync" wobble effect by giving them different time periods (not just different speeds)
+        const minTimeShift = 5000; // may individual shift for animation
+        const maxTimeShift = 7000; // may individual shift for animation
+
+
+
+        let scale = 1; // between 0 and 200
+
+        for (let i = 0; i < matrixSize; i++) {
+          const row = [];
+          for (let j = 0; j < matrixSize; j++) {
+            var digit = new BABYLON.GUI.TextBlock();
+            row.push(digit);
+            digit.value = Math.round(Math.random() * 9);
+
+            digit.color = "rgb(50, 253, 254)";
+            digit.height = `${Math.round(scale * 90)}px`;
+
+            // Style
+            const style = advancedTexture.createStyle();
+            style.fontSize = getFontSize(24);
+            style.fontFamily = 'Arial';
+            // style.fontStyle = "bold";
+            digit.style = style;
+
+            digit.top = `${Math.round(scale * (matrixTop + i * matrixSpacing))}px`;
+            digit.left = `${Math.round(scale * (matrixLeft + j * matrixSpacing))}px`;
+
+            digit.text = `${digit.value}`;
+            // digit.text = `(${digit.left}, ${digit.top})`;
+            digit.selected = false;
+            
+            // force random mutation upon all digit variable fields
+            newRandomDigit(digit);
+
+            advancedTexture.addControl(digit);
+          }
+          matrix.push(row);
+        } 
+        
+        scene.onPointerObservable.add((pointerInfo) => {
+          switch (pointerInfo.type) {
+            case BABYLON.PointerEventTypes.POINTERDOWN:
+              console.log("POINTER DOWN", pointerInfo.event);
+              if (pointerInfo.event.button === 0) {
+                isSelecting = true;
+                isDragging = false;
+              } else if (pointerInfo.event.button === 2) {
+                isDragging = true;
+                isSelecting = false;
+              }
+              lastMouseX = scene.pointerX;
+              lastMouseY = scene.pointerY;
+              break;
+            case BABYLON.PointerEventTypes.POINTERUP:
+              console.log("POINTER UP");
+              isSelecting = false;
+              isDragging = false;
+              break;
+            case BABYLON.PointerEventTypes.POINTERMOVE:
+              console.log("POINTER MOVE");
+              /*
+                var pickingInfo = scene.pick(scene.pointerX, scene.pointerY);
+                console.log('pointer:', {
+                  pointerX: scene.pointerX,
+                  pointerY: scene.pointerY
+                });
+              */
+              
+              if (isDragging) {
+                matrixLeft += (scene.pointerX - lastMouseX) / scale;
+                matrixTop += (scene.pointerY - lastMouseY) / scale;
+                lastMouseX = scene.pointerX;
+                lastMouseY = scene.pointerY;
+              }
+              break;
+            case BABYLON.PointerEventTypes.POINTERWHEEL:
+              console.log("POINTER WHEEL");
+              break;
+            case BABYLON.PointerEventTypes.POINTERPICK:
+              console.log("POINTER PICK");
+              break;
+            case BABYLON.PointerEventTypes.POINTERTAP:
+              console.log("POINTER TAP");
+              break;
+            case BABYLON.PointerEventTypes.POINTERDOUBLETAP:
+              console.log("POINTER DOUBLE-TAP");
+              break;
+          }
+        });
+
+        document.querySelector('#renderCanvas').onwheel = (event) => {
+          event.preventDefault();
+
+          scale += event.deltaY * -0.0005;
+
+          // Restrict scale
+          scale = Math.min(Math.max(1, scale), 4);
+        }
+
+        // TODO should implement virtualization to give the feeling of infinite array
+
+        scene.onBeforeRenderObservable.add(() => {
+          const ts = new Date().getTime();
+          // console.log('pop');
+          for (let i = 0; i < matrixSize; i++) {
+            const row = [];
+            for (let j = 0; j < matrixSize; j++) {
+              const digit = matrix[i][j];
+
+              // from time to time, we randomize some of the digit parameters
+              // EDIT: disabled, doesn't work like I would like it to be
+              // randomDigitMutation(digit, 0.001);
+
+              // some kind of "CRT" like jitter
+              // EDIT: disabled
+              const highFreqJitterX = 0; // Math.random() * 1;
+              const highFreqJitterY = 0; // Math.random() * 1;
+
+              // we want to "unsync" digits
+              const timeShiftX = minTimeShift + digit.randomTimeShiftX * maxTimeShift;
+              const timeShiftY = minTimeShift + digit.randomTimeShiftY * maxTimeShift;
+
+              // wobble speed
+              const wobbleSpeedX = minWobbleSpeed + digit.randomWobbleSpeedX * maxWobbleSpeed;
+              const wobbleSpeedY = minWobbleSpeed + digit.randomWobbleSpeedY * maxWobbleSpeed;
+
+              const wobbleAmplitudeX = minWobbleAmplitude + (digit.randomWobbleAmplitudeX - 0.5) * maxWobbleAmplitude;
+              const wobbleAmplitudeY = minWobbleAmplitude + (digit.randomWobbleAmplitudeY - 0.5) * maxWobbleAmplitude;
+
+              const lowFreqWobbleX = (wobbleAmplitudeX) * Math.cos((timeShiftX + ts) * wobbleSpeedX);
+              const lowFreqWobbleY = (wobbleAmplitudeY) * Math.cos((timeShiftY + ts) * wobbleSpeedY);
+
+              const randomX = highFreqJitterX + lowFreqWobbleX;
+              const randomY = highFreqJitterY + lowFreqWobbleY;
+
+              const newTop = scale * (matrixTop + i * matrixSpacing + randomY);
+              const newLeft = scale * (matrixLeft + j * matrixSpacing + randomX);
+
+              digit.top = `${Math.round(newTop)}px`;
+              digit.left = `${Math.round(newLeft)}px`;
+ 
+              const screenMouseX = scene.pointerX - engine.getRenderWidth() / 2;
+              const screenMouseY = scene.pointerY - engine.getRenderHeight() / 2;
+
+              const dx = screenMouseX - newLeft;
+              const dy = screenMouseY - newTop;
+  
+              const screenDistance = Math.sqrt(dx * dx + dy * dy);
+
+              // we need to adjust cutoff for the current zoom level
+              const cutoff = 50 * scale;
+
+              // compute the adjusted distance (based on zoom)
+              let distance = 1 - (Math.max(1, Math.min(cutoff, screenDistance)) / cutoff);
+
+              if (isSelecting && (distance > 0.7)) {
+                digit.selected = true;
+              }
+
+              // hold selected items
+              distance = digit.selected ? 1 : distance;
+
+              // an hover effect based on mouse distance
+              const minHover = 30;
+              const maxHover = 50;
+              const hoverAmount = minHover + distance * maxHover;
+
+              digit.height = `${Math.round(scale * (120))}px`;
+              digit.style.fontSize = getFontSize(scale * 0.2 * (hoverAmount));
+            }
+          }
+        });
+
+        BABYLON.Effect.ShadersStore["crtFragmentShader"] = `
+    #ifdef GL_ES
+        precision highp float;
+    #endif
+
+    #define PI 3.1415926538
+
+    // Samplers
+    varying vec2 vUV;
+    uniform sampler2D textureSampler;
+
+    // Parameters
+    uniform vec2 curvature;
+    uniform vec2 screenResolution;
+    uniform vec2 scanLineOpacity;
+    uniform float vignetteOpacity;
+    uniform float brightness;
+    uniform float vignetteRoundness;
+
+
+    vec2 curveRemapUV(vec2 uv)
+    {
+        // as we near the edge of our screen apply greater distortion using a sinusoid.
+
+        uv = uv * 2.0 - 1.0;
+		vec2 offset = abs(uv.yx) / vec2(curvature.x, curvature.y);
+		uv = uv + uv * offset * offset;
+		uv = uv * 0.5 + 0.5;
+        return uv;
+    }
+
+    vec4 scanLineIntensity(float uv, float resolution, float opacity)
+    {
+        float intensity = sin(uv * resolution * PI * 2.0);
+        intensity = ((0.5 * intensity) + 0.5) * 0.9 + 0.1;
+        return vec4(vec3(pow(intensity, opacity)), 1.0);
+    }
+
+    vec4 vignetteIntensity(vec2 uv, vec2 resolution, float opacity, float roundness)
+    {
+        float intensity = uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y);
+        return vec4(vec3(clamp(pow((resolution.x / roundness) * intensity, opacity), 0.0, 1.0)), 1.0);
+    }
+
+    void main(void) 
+    {
+        vec2 remappedUV = curveRemapUV(vec2(vUV.x, vUV.y));
+        vec4 baseColor = texture2D(textureSampler, remappedUV);
+
+        baseColor *= vignetteIntensity(remappedUV, screenResolution, vignetteOpacity, vignetteRoundness);
+
+        baseColor *= scanLineIntensity(remappedUV.x, screenResolution.y, scanLineOpacity.x);
+        baseColor *= scanLineIntensity(remappedUV.y, screenResolution.x, scanLineOpacity.y);
+
+        baseColor *= vec4(vec3(brightness), 1.0);
+
+        if (remappedUV.x < 0.0 || remappedUV.y < 0.0 || remappedUV.x > 1.0 || remappedUV.y > 1.0){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        } else {
+            gl_FragColor = baseColor;
+        }
+    }
+    `;
+
+
+        var postProcess = new BABYLON.PostProcess("CRTShaderPostProcess", "crt", ["curvature", "screenResolution", "scanLineOpacity", "vignetteOpacity", "brightness", "vignetteRoundness"], null, 0.25, camera);
+        postProcess.onApply = function (effect) {
+          effect.setFloat2("curvature", 12.0, 6.0);
+          effect.setFloat2("screenResolution", config.crt.screenResolution.width, config.crt.screenResolution.height);
+          effect.setFloat2("scanLineOpacity", 1, 1);
+          effect.setFloat("vignetteOpacity", 0.3);
+          effect.setFloat("brightness", 16);
+          effect.setFloat("vignetteRoundness", 6.0);
+        };
+
+        return scene;
+      };
+      window.initFunction = async function () {
+        var asyncEngineCreation = async function () {
+          try {
+            return createDefaultEngine();
+          } catch (e) {
+            console.log("the available createEngine function failed. Creating the default engine instead");
+            return createDefaultEngine();
+          }
+        };
+
+        window.engine = await asyncEngineCreation();
+        if (!engine) throw "engine should not be null.";
+        startRenderLoop(engine, canvas);
+        window.scene = createScene();
+      };
+      initFunction().then(() => {
+        sceneToRender = scene;
+      });
+
+      // Resize
+      window.addEventListener("resize", function () {
+        engine.resize();
+      });
+    </script>
+  </body>
+</html>
