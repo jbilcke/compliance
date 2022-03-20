@@ -6,6 +6,17 @@
 
   <title>Compliance</title>
 
+  <link rel="preload" href="fonts/MrEavesXLModOT-Book.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModNarOT-Thin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModOT-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModNarOT-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModNarOT-Reg.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModOT-Thin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModOT-Light.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModNarOT-Book.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModNarOT-Light.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/MrEavesXLModOT-Reg.woff2" as="font" type="font/woff2" crossorigin>
+
   <script src="libs/dat.gui.min.js"></script>
   <script src="libs/ammo.js"></script>
   <script src="libs/cannon.js"></script>
@@ -19,7 +30,7 @@
   <script src="libs/babylonjs.serializers.min.js"></script>
   <script src="libs/babylon.gui.min.js"></script>
   <script src="libs/babylon.inspector.bundle.js"></script>
-
+  <link href="fonts/stylesheet.css" rel="stylesheet">
   <style>
     /*
       all this CSS is just quick & dirty, support of multiple resolutions is not a focus right now
@@ -38,6 +49,10 @@
       background-position-y: -200px;
       background-position-x: -392px;
       background-size: 2980px;
+
+      font-family: 'MrEavesXLModNarOT-Reg';
+      font-weight: normal;
+      font-style: normal;
     }
 
     .wrapper {
@@ -111,8 +126,8 @@
       // CRET screen resolution needs to be half of the actual resolution
       crt: {
         screenResolution: {
-          width: 640, // 486, 512, 640
-          height: 512, // 320, 480, 512, 640
+          width: 800, // 486, 512, 640
+          height: 800, // 320, 480, 512, 640
         }
       },
       window: {
@@ -254,7 +269,7 @@
 
       let matrixTop = -500;
       let matrixLeft = -500;
-      const matrixSpacing = 30;
+      const matrixSpacing = 24;
 
       let isDragging = false;
       let isSelecting = false;
@@ -279,7 +294,7 @@
 
 
 
-      let scale = 1; // between 0 and 200
+      let scale = 2; // between 0 and 200
 
       for (let i = 0; i < matrixSize; i++) {
         const row = [];
@@ -289,12 +304,12 @@
           digit.value = Math.round(Math.random() * 9);
 
           digit.color = "rgb(50, 253, 254)";
-          digit.height = `${Math.round(scale * 100)}px`;
+          digit.height = `${Math.round(scale * 128)}px`;
 
           // Style
           const style = advancedTexture.createStyle();
-          style.fontSize = getFontSize(24);
-          style.fontFamily = 'Arial';
+          style.fontSize = getFontSize(12);
+          style.fontFamily = 'MrEavesXLModOT-Book';
           // style.fontStyle = "bold";
           digit.style = style;
 
@@ -320,9 +335,67 @@
       const engineWidth = engine.getRenderWidth();
       const engineHeight = engine.getRenderHeight();
 
+      const header = new BABYLON.GUI.Rectangle();
+      // header.left = 0;
+      // header.top = 0;
+      header.width = "100%";
+      header.height = `${Math.round(engineHeight * 0.20)}px`;
+      header.thickness = 0;
+      header.background = bgColor; // "rgb(0, 10, 17)"; // "transparent";
+      // header.paddingBottom = 5;
+      // header.paddingRight = 5;
+      header.horizontalAlignment = 0;
+      header.verticalAlignment = 0;
+      advancedTexture.addControl(header);
+
+      const titleBox = new BABYLON.GUI.Rectangle();
+      titleBox.left = "-5%";
+      titleBox.top = `${70}px`;
+      titleBox.width = "90%";
+      titleBox.height = `${70}px`;
+      titleBox.color = fgColor;
+      titleBox.thickness = 2;
+      titleBox.background = "transparent";
+      titleBox.horizontalAlignment = 1;
+      titleBox.verticalAlignment = 0; // 3;
+
+      header.addControl(titleBox);
+
+
+      var titleText = new BABYLON.GUI.TextBlock();
+
+      titleText.color = fgColor;
+      titleText.height = `${100}px`;
+
+      // Style
+      const titleStyle = advancedTexture.createStyle();
+      titleStyle.fontSize = getFontSize(45);
+      titleStyle.fontFamily = 'MrEavesXLModOT-Book';
+      // titleStyle.fontStyle = "bold";
+      titleText.style = titleStyle;
+      titleText.top = `2px`;
+      titleText.left = `-43%`;
+      titleText.text = `Siena`;
+      titleBox.addControl(titleText);
+
+
+
+      const headerDoubleBorder = new BABYLON.GUI.Rectangle();
+      headerDoubleBorder.left = "-5%";
+      headerDoubleBorder.top = `${Math.round((engineHeight * 0.185))}px`;
+      headerDoubleBorder.width = "110%";
+      headerDoubleBorder.height = "10px";
+      headerDoubleBorder.color = fgColor;
+      headerDoubleBorder.thickness = 2;
+      headerDoubleBorder.background = "transparent";
+      headerDoubleBorder.horizontalAlignment = 0;
+      headerDoubleBorder.verticalAlignment = 3; // 3;
+
+      header.addControl(headerDoubleBorder);
+
       const footer = new BABYLON.GUI.Rectangle();
       footer.left = 0;
-      footer.top = engineHeight * 0.79;
+      footer.top = `${Math.round(engineHeight * 0.82)}px`;
       footer.width = "100%";
       footer.height = engineHeight * 0.40;
       footer.thickness = 0;
@@ -352,8 +425,8 @@
       const completions = [];
 
       const boxesMarginL = engineWidth * 0.06;
-      const boxWidth = engineWidth * 0.17;
-      const boxSpacingL = engineWidth * 0.015;
+      const boxWidth = engineWidth * 0.18;
+      const boxSpacingL = engineWidth * 0.008;
 
       for (let i = 0; i < 5; i++) {
         const left = boxesMarginL + (i * (boxWidth + boxSpacingL));
@@ -362,10 +435,10 @@
 
         const dropzone = new BABYLON.GUI.Rectangle();
         dropzone.left = left;
-        dropzone.top = 18;
+        dropzone.top = 23;
         dropzone.width = width;
-        dropzone.height = `${Math.round(engineHeight * 0.049)}px`;
-        dropzone.cornerRadius = 5;
+        dropzone.height = `51px`;
+        dropzone.cornerRadius = 2;
         dropzone.color = fgColor;
         dropzone.thickness = thickness;
         dropzone.background = "transparent";
@@ -382,16 +455,16 @@
         var category = new BABYLON.GUI.TextBlock();
 
         category.color = fgColor;
-        category.height = `${Math.round(scale * 100)}px`;
+        category.height = `${100}px`;
 
         // Style
         const categoryStyle = advancedTexture.createStyle();
-        categoryStyle.fontSize = getFontSize(23);
+        categoryStyle.fontSize = getFontSize(31);
         categoryStyle.fontFamily = 'Arial';
-        categoryStyle.fontStyle = "bold";
+        // categoryStyle.fontStyle = "bold";
         category.style = categoryStyle;
 
-        category.top = `0px`;
+        category.top = `2px`;
         category.left = `0px`;
         category.text = `0${i + 1}`;
         dropzone.addControl(category);
@@ -399,10 +472,10 @@
 
         const completion = new BABYLON.GUI.Rectangle();
         completion.left = left;
-        completion.top = engineHeight * 0.075;
+        completion.top = 86;
         completion.width = width;
-        completion.height = `${Math.round(engineHeight * 0.042)}px`;
-        completion.cornerRadius = 5;
+        completion.height = `40px`;
+        completion.cornerRadius = 2;
         completion.color = fgColor;
         completion.thickness = thickness;
         completion.background = "transparent";
@@ -421,9 +494,9 @@
 
         // Style
         const completionStyle = advancedTexture.createStyle();
-        completionStyle.fontSize = getFontSize(23);
-        completionStyle.fontFamily = 'Arial';
-        completionStyle.fontStyle = "bold";
+        completionStyle.fontSize = getFontSize(32);
+        completionStyle.fontFamily = 'MrEavesXLModOT-Book';
+        // completionStyle.fontStyle = "bold";
         completionRate.style = completionStyle;
         completionRate.top = `2px`;
         completionRate.left = `-${Math.round(engineWidth * 0.048)}px`;
@@ -434,7 +507,7 @@
 
       const footerSeparator = new BABYLON.GUI.Rectangle();
       footerSeparator.left = "-5%";
-      footerSeparator.top = 128;
+      footerSeparator.top = 137;
       footerSeparator.width = "110%";
       footerSeparator.height = "2px";
       // rect1.cornerRadius = 20;
@@ -506,7 +579,7 @@
         scale += event.deltaY * -0.0005;
 
         // Restrict scale
-        scale = Math.min(Math.max(1, scale), 6);
+        scale = Math.min(Math.max(2, scale), 6);
       }
 
       // TODO should implement virtualization to give the feeling of infinite array
@@ -560,7 +633,7 @@
             const screenDistance = Math.sqrt(dx * dx + dy * dy);
 
             // we need to adjust cutoff for the current zoom level
-            const cutoff = 50 * scale;
+            const cutoff = 40 * scale;
 
             // compute the adjusted distance (based on zoom)
             let distance = 1 - (Math.max(1, Math.min(cutoff, screenDistance)) / cutoff);
@@ -573,12 +646,12 @@
             distance = digit.selected ? 1 : distance;
 
             // an hover effect based on mouse distance
-            const minHover = 30;
-            const maxHover = 50;
+            const minHover = 62;
+            const maxHover = 74;
             const hoverAmount = minHover + distance * maxHover;
 
             digit.height = `${Math.round(scale * (120))}px`;
-            digit.style.fontSize = getFontSize(scale * 0.2 * (hoverAmount));
+            digit.style.fontSize = getFontSize(scale * 0.12 * (hoverAmount));
           }
         }
       });
@@ -647,21 +720,104 @@
     }
     `;
 
-
       var postProcess1 = new BABYLON.PostProcess("CRTShaderPostProcess", "crt", ["curvature", "screenResolution", "scanLineOpacity", "vignetteOpacity", "brightness", "vignetteRoundness"], null, 0.25, camera);
       postProcess1.onApply = function (effect) {
-        effect.setFloat2("curvature", 12.0, 6.0);
+        // having a curvature is nice, but this should happen AFTER the pixelation and blur effect
+        effect.setFloat2("curvature", 255.0, 255.0);
         effect.setFloat2("screenResolution", config.crt.screenResolution.width, config.crt.screenResolution.height);
-        effect.setFloat2("scanLineOpacity", 0.2, 0.2);
-        effect.setFloat("vignetteOpacity", 0.3);
-        effect.setFloat("brightness", 6);
-        effect.setFloat("vignetteRoundness", 6.0);
+        effect.setFloat2("scanLineOpacity", 0.1, 0.1);
+        effect.setFloat("vignetteOpacity", 0.2); // was 0.3
+        effect.setFloat("brightness", 1);
+        effect.setFloat("vignetteRoundness", 20.0);
       };
 
+
       // ----------- BLUR EFFECT ----------
-      var kernel = 4.0;	
-      var postProcess2 = new BABYLON.BlurPostProcess("Horizontal blur", new BABYLON.Vector2(1.0, 0), kernel, 1, camera);
-      var postProcess3 = new BABYLON.BlurPostProcess("Vertical blur", new BABYLON.Vector2(0, 1.0), kernel, 1, camera);
+      var postProcess2 = new BABYLON.BlurPostProcess("Horizontal blur", new BABYLON.Vector2(0.7, 0), 4.0, 0.5, camera);
+      var postProcess3 = new BABYLON.BlurPostProcess("Vertical blur", new BABYLON.Vector2(0, 0.7), 4.0, 0.5, camera);
+
+      BABYLON.Effect.ShadersStore["curveFragmentShader"] = `
+    #ifdef GL_ES
+        precision highp float;
+    #endif
+
+    #define PI 3.1415926538
+
+    // Samplers
+    varying vec2 vUV;
+    uniform sampler2D textureSampler;
+
+    // Parameters
+    uniform vec2 curvature;
+    uniform vec2 screenResolution;
+    uniform vec2 scanLineOpacity;
+    uniform float vignetteOpacity;
+    uniform float brightness;
+    uniform float vignetteRoundness;
+
+
+    vec2 curveRemapUV(vec2 uv)
+    {
+        // as we near the edge of our screen apply greater distortion using a sinusoid.
+
+        uv = uv * 2.0 - 1.0;
+		vec2 offset = abs(uv.yx) / vec2(curvature.x, curvature.y);
+		uv = uv + uv * offset * offset;
+		uv = uv * 0.5 + 0.5;
+        return uv;
+    }
+
+    vec4 scanLineIntensity(float uv, float resolution, float opacity)
+    {
+        float intensity = sin(uv * resolution * PI * 2.0);
+        intensity = ((0.5 * intensity) + 0.5) * 0.9 + 0.1;
+        return vec4(vec3(pow(intensity, opacity)), 1.0);
+    }
+
+    vec4 vignetteIntensity(vec2 uv, vec2 resolution, float opacity, float roundness)
+    {
+        float intensity = uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y);
+        return vec4(vec3(clamp(pow((resolution.x / roundness) * intensity, opacity), 0.0, 1.0)), 1.0);
+    }
+
+    void main(void) 
+    {
+        vec2 remappedUV = curveRemapUV(vec2(vUV.x, vUV.y));
+        vec4 baseColor = texture2D(textureSampler, remappedUV);
+
+        baseColor *= vignetteIntensity(remappedUV, screenResolution, vignetteOpacity, vignetteRoundness);
+
+        baseColor *= scanLineIntensity(remappedUV.x, screenResolution.y, scanLineOpacity.x);
+        baseColor *= scanLineIntensity(remappedUV.y, screenResolution.x, scanLineOpacity.y);
+
+        baseColor *= vec4(vec3(brightness), 1.0);
+
+        if (remappedUV.x < 0.0 || remappedUV.y < 0.0 || remappedUV.x > 1.0 || remappedUV.y > 1.0){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        } else {
+            gl_FragColor = baseColor;
+        }
+    }
+    `;
+
+      var postProcess4 = new BABYLON.PostProcess("CurveShaderPostProcess", "curve", ["curvature", "screenResolution", "scanLineOpacity", "vignetteOpacity", "brightness", "vignetteRoundness"], null, 0.25, camera);
+      postProcess4.onApply = function (effect) {
+        // having a curvature is nice, but this should happen AFTER the pixelation and blur effect
+        effect.setFloat2("curvature", 255.0, 255.0);
+        effect.setFloat2("screenResolution", config.crt.screenResolution.width, config.crt.screenResolution.height);
+        effect.setFloat2("scanLineOpacity", 0.2, 0.2);
+        effect.setFloat("vignetteOpacity", 0.3); // was 0.3
+        effect.setFloat("brightness", 8);
+        effect.setFloat("vignetteRoundness", 20.0);
+      };
+
+
+      var postProcess5 = new BABYLON.BlurPostProcess("Horizontal blur", new BABYLON.Vector2(1.0, 0), 2.0, 0.86, camera);
+      var postProcess6 = new BABYLON.BlurPostProcess("Vertical blur", new BABYLON.Vector2(0, 1.0), 2.0, 0.86, camera);
+
+      // var postProcess6 = new BABYLON.BlurPostProcess("Horizontal blur", new BABYLON.Vector2(1.0, 0), 2.0, 0.85, camera);
+      // var postProcess7 = new BABYLON.BlurPostProcess("Vertical blur", new BABYLON.Vector2(0, 1.0), 2.0, 0.85, camera);
+
 
       return scene;
     };

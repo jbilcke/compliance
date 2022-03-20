@@ -1,0 +1,90 @@
+@font-face {
+    font-family: 'MrEavesXLModOT-Book';
+    src: url('MrEavesXLModOT-Book.woff2') format('woff2'),
+        url('MrEavesXLModOT-Book.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModNarOT';
+    src: url('MrEavesXLModNarOT-Thin.woff2') format('woff2'),
+        url('MrEavesXLModNarOT-Thin.woff') format('woff');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModOT';
+    src: url('MrEavesXLModOT-Bold.woff2') format('woff2'),
+        url('MrEavesXLModOT-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModNarOT';
+    src: url('MrEavesXLModNarOT-Bold.woff2') format('woff2'),
+        url('MrEavesXLModNarOT-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModNarOT-Reg';
+    src: url('MrEavesXLModNarOT-Reg.woff2') format('woff2'),
+        url('MrEavesXLModNarOT-Reg.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModOT';
+    src: url('MrEavesXLModOT-Thin.woff2') format('woff2'),
+        url('MrEavesXLModOT-Thin.woff') format('woff');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModOT';
+    src: url('MrEavesXLModOT-Light.woff2') format('woff2'),
+        url('MrEavesXLModOT-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModNarOT-Book';
+    src: url('MrEavesXLModNarOT-Book.woff2') format('woff2'),
+        url('MrEavesXLModNarOT-Book.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModNarOT';
+    src: url('MrEavesXLModNarOT-Light.woff2') format('woff2'),
+        url('MrEavesXLModNarOT-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MrEavesXLModOT-Reg';
+    src: url('MrEavesXLModOT-Reg.woff2') format('woff2'),
+        url('MrEavesXLModOT-Reg.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
